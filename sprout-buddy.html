@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sprout Buddy</title>
+<style>
+  :root {
+    --bg1: #ffeedd;
+    --bg2: #ffd9e6;
+    --card: #fffdf9;
+    --ink: #5b4636;
+    --soft: #a48b78;
+    --green: #7cc576;
+    --green-d: #4fa35a;
+    --pink: #ff8fb1;
+    --sun: #ffc93c;
+    --water: #6ec6ff;
+    --love: #ff7aa2;
+    --pot: #f0996b;
+    --pot-d: #d9805a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    font-family: ui-rounded, "Nunito", "Quicksand", "Segoe UI", system-ui, sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1), var(--bg2));
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    padding: 24px 16px 40px;
+  }
+  .app {
+    width: 100%;
+    max-width: 420px;
+    background: var(--card);
+    border-radius: 32px;
+    box-shadow: 0 12px 40px rgba(180, 110, 90, .22), 0 2px 0 rgba(255,255,255,.8) inset;
+    padding: 22px 22px 26px;
+    text-align: center;
+  }
+  h1 { margin: 0 0 2px; font-size: 1.5rem; letter-spacing: .5px; }
+  .sub { margin: 0 0 14px; color: var(--soft); font-size: .9rem; }
+
+  .name-row { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .name-row input {
+    font: inherit; font-weight: 700; text-align: center; color: var(--ink);
+    border: 2px dashed #f0d9c8; background: #fff8f1; border-radius: 14px;
+    padding: 6px 10px; width: 170px;
+  }
+  .name-row input:focus { outline: none; border-color: var(--pink); }
+  .stage-tag {
+    font-size: .75rem; font-weight: 700; color: #fff; background: var(--green);
+    padding: 4px 10px; border-radius: 999px;
+  }
+
+  /* Scene */
+  .scene {
+    position: relative; overflow: hidden;
+    border-radius: 26px;
+    background: linear-gradient(#cfeeff, #eaf8ff 70%, #fff4e0);
+    transition: background .6s;
+    height: 340px;
+    cursor: pointer;
+    user-select: none; -webkit-user-select: none;
+  }
+  .scene.sunny { background: linear-gradient(#ffe9a8, #fff3cf 70%, #fff4e0); }
+  .sun {
+    position: absolute; top: 14px; right: 18px; width: 54px; height: 54px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff2a8, var(--sun));
+    box-shadow: 0 0 0 8px rgba(255, 201, 60, .25), 0 0 40px 12px rgba(255, 201, 60, .35);
+    opacity: .55; transform: scale(.85);
+    transition: all .5s;
+  }
+  .scene.sunny .sun { opacity: 1; transform: scale(1.15) rotate(20deg); }
+  .cloud {
+    position: absolute; background: #fff; border-radius: 999px; opacity: .9;
+    animation: drift 26s linear infinite;
+  }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+  .c1 { width: 70px; height: 22px; top: 40px; left: -90px; }
+  .c1::before { width: 30px; height: 30px; top: -14px; left: 12px; }
+  .c1::after { width: 22px; height: 22px; top: -9px; left: 36px; }
+  .c2 { width: 50px; height: 16px; top: 90px; left: -60px; animation-duration: 38s; animation-delay: -14s; opacity: .7; }
+  .c2::before { width: 22px; height: 22px; top: -10px; left: 8px; }
+  .c2::after { width: 16px; height: 16px; top: -6px; left: 26px; }
+  @keyframes drift { to { transform: translateX(560px); } }
+
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #tilt { transform-origin: 150px 268px; transition: transform .8s ease; }
+  #tilt.droop { transform: rotate(13deg); }
+  #sway { transform-origin: 150px 268px; animation: sway 4s ease-in-out infinite; }
+  @keyframes sway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+  #plant.wiggle { animation: wiggle .5s ease; transform-origin: 150px 268px; }
+  @keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+  .eyes { transform-origin: 150px 300px; animation: blink 4.5s infinite; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+  #pot-group.bounce { animation: bounce .45s ease; transform-origin: 150px 340px; }
+  @keyframes bounce { 40% { transform: scale(1.05, .93); } 70% { transform: scale(.97, 1.04); } }
+
+  /* Speech bubble */
+  .bubble {
+    position: absolute; left: 50%; top: 12px; transform: translateX(-50%);
+    background: #fff; color: var(--ink); font-weight: 700; font-size: .85rem;
+    padding: 8px 14px; border-radius: 16px; box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    max-width: 78%; white-space: nowrap;
+    transition: opacity .3s;
+    z-index: 3;
+  }
+  .bubble::after {
+    content: ""; position: absolute; left: 50%; bottom: -6px; width: 12px; height: 12px;
+    background: #fff; transform: translateX(-50%) rotate(45deg); border-radius: 2px;
+  }
+
+  /* Particles */
+  .p { position: absolute; pointer-events: none; z-index: 4; font-weight: 800; }
+  .rise { animation: rise 1.6s ease-out forwards; }
+  @keyframes rise {
+    0% { opacity: 0; transform: translateY(0) scale(.6); }
+    15% { opacity: 1; }
+    100% { opacity: 0; transform: translate(var(--dx), -110px) scale(1.2); }
+  }
+  .drop {
+    width: 8px; height: 12px; background: var(--water); border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    animation: fall .9s ease-in forwards;
+  }
+  @keyframes fall {
+    0% { opacity: 0; transform: translateY(0); }
+    15% { opacity: .95; }
+    100% { opacity: 0; transform: translateY(var(--fall)); }
+  }
+
+  /* Meters */
+  .meters { margin: 18px 4px 4px; display: grid; gap: 9px; }
+  .meter { display: grid; grid-template-columns: 62px 1fr; gap: 10px; align-items: center; text-align: left; font-size: .8rem; font-weight: 700; color: var(--soft); }
+  .track { height: 12px; background: #f5ebe2; border-radius: 999px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 999px; transition: width .5s ease; }
+  .f-water { background: var(--water); }
+  .f-sun { background: var(--sun); }
+  .f-love { background: var(--love); }
+
+  .growth { margin-top: 12px; }
+  .growth .track { height: 16px; background: #e8f5e4; }
+  .f-grow { background: linear-gradient(90deg, #a6e39a, var(--green-d)); }
+  .growth small { display: block; margin-top: 4px; color: var(--soft); font-size: .75rem; font-weight: 700; }
+
+  /* Buttons */
+  .buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 18px; }
+  button.act {
+    font: inherit; font-weight: 800; font-size: .8rem; color: #fff;
+    border: none; border-radius: 18px; padding: 12px 4px 11px;
+    cursor: pointer; box-shadow: 0 5px 0 rgba(0,0,0,.14);
+    transition: transform .08s, box-shadow .08s, filter .2s;
+  }
+  button.act:hover { filter: brightness(1.05); }
+  button.act:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,.14); }
+  button.act:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+  .b-water { background: var(--water); }
+  .b-sun { background: var(--sun); color: #7a5300; }
+  .b-song { background: #b58cff; }
+  .b-pet { background: var(--love); }
+  button.act span { display: block; font-size: 1.15rem; line-height: 1.3; }
+
+  .foot { margin-top: 16px; font-size: .75rem; color: var(--soft); }
+  .foot button {
+    font: inherit; color: var(--soft); background: none; border: none; text-decoration: underline; cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: .01s !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Sprout Buddy</h1>
+  <p class="sub">Take care of a tiny plant and watch it grow.</p>
+
+  <div class="name-row">
+    <input id="name" maxlength="14" value="Sprout" aria-label="Plant name">
+    <span class="stage-tag" id="stage">Seed</span>
+  </div>
+
+  <div class="scene" id="scene" aria-label="Your plant. Click it to pet it.">
+    <div class="sun"></div>
+    <div class="cloud c1"></div>
+    <div class="cloud c2"></div>
+    <div class="bubble" id="bubble">Hi! I'm a little seed.</div>
+
+    <svg viewBox="0 0 300 340" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+      <!-- ground shadow -->
+      <ellipse cx="150" cy="334" rx="82" ry="7" fill="rgba(120,80,50,.15)"/>
+      <g id="tilt">
+        <g id="sway">
+          <g id="plant"></g>
+        </g>
+      </g>
+      <g id="pot-group">
+        <!-- back rim -->
+        <path d="M84 262 h132 a6 6 0 0 1 6 6 v12 a6 6 0 0 1 -6 6 h-132 a6 6 0 0 1 -6 -6 v-12 a6 6 0 0 1 6 -6z" fill="var(--pot-d)"/>
+        <!-- body -->
+        <path d="M92 286 h116 l-10 46 a10 10 0 0 1 -10 8 h-76 a10 10 0 0 1 -10 -8z" fill="var(--pot)"/>
+        <!-- soil peeking -->
+        <ellipse cx="150" cy="268" rx="58" ry="6" fill="#8a5a3c"/>
+        <!-- blush -->
+        <ellipse cx="119" cy="313" rx="9" ry="5.5" fill="#ff8fa3" opacity=".55"/>
+        <ellipse cx="181" cy="313" rx="9" ry="5.5" fill="#ff8fa3" opacity=".55"/>
+        <g id="face"></g>
+      </g>
+    </svg>
+  </div>
+
+  <div class="meters">
+    <div class="meter"><span>Water</span><div class="track"><div class="fill f-water" id="m-water"></div></div></div>
+    <div class="meter"><span>Sunshine</span><div class="track"><div class="fill f-sun" id="m-sun"></div></div></div>
+    <div class="meter"><span>Love</span><div class="track"><div class="fill f-love" id="m-love"></div></div></div>
+  </div>
+
+  <div class="growth">
+    <div class="track"><div class="fill f-grow" id="m-grow"></div></div>
+    <small id="grow-label">Growth 0%</small>
+  </div>
+
+  <div class="buttons">
+    <button class="act b-water" id="btn-water"><span>&#128167;</span>Water</button>
+    <button class="act b-sun" id="btn-sun"><span>&#9728;&#65039;</span>Sunshine</button>
+    <button class="act b-song" id="btn-song"><span>&#9835;</span>Sing</button>
+    <button class="act b-pet" id="btn-pet"><span>&#9829;</span>Pet</button>
+  </div>
+
+  <p class="foot">Your buddy is saved in this browser. <button id="reset">Start over</button></p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY = "sprout-buddy-v1";
+  var $ = function (id) { return document.getElementById(id); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+  var rand = function (a, b) { return a + Math.random() * (b - a); };
+  var pick = function (arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+
+  var fresh = function () {
+    return { name: "Sprout", growth: 0, water: 60, sun: 60, love: 60, ts: Date.now() };
+  };
+  var state = fresh();
+
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var s = JSON.parse(raw);
+      state = Object.assign(fresh(), s);
+      // gentle catch-up for time away (max 20 "ticks")
+      var away = Math.min(20, Math.floor((Date.now() - state.ts) / 60000));
+      for (var i = 0; i < away; i++) decay(0.5);
+    } catch (e) { /* storage unavailable: fine */ }
+  }
+  function save() {
+    try { state.ts = Date.now(); localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  /* ---------- Rendering the plant ---------- */
+  var plantEl = $("plant"), faceEl = $("face");
+  var BASE_Y = 268;
+
+  function stageName(g) {
+    if (g < 8) return "Seed";
+    if (g < 30) return "Sprout";
+    if (g < 60) return "Seedling";
+    if (g < 85) return "Little Plant";
+    return "In Bloom";
+  }
+
+  function mood() {
+    var avg = (state.water + state.sun + state.love) / 3;
+    if (avg < 30) return "sad";
+    if (avg < 55) return "meh";
+    return "happy";
+  }
+
+  function leaf(x, y, dir, size, rot) {
+    return '<g transform="translate(' + x + ' ' + y + ') rotate(' + (dir * rot) + ') scale(' + size + ')">' +
+      '<path d="M0 0 Q' + (dir * 14) + ' -16 ' + (dir * 34) + ' -4 Q' + (dir * 16) + ' 12 0 0z" fill="#8fd67f"/>' +
+      '<path d="M2 -1 Q' + (dir * 16) + ' -4 ' + (dir * 28) + ' -3" stroke="#5cb85e" stroke-width="1.6" fill="none" stroke-linecap="round"/>' +
+      '</g>';
+  }
+
+  function drawPlant() {
+    var g = state.growth;
+    var h = 12 + g * 1.5;                      // stem height
+    var topY = BASE_Y - h;
+    var out = "";
+
+    if (g < 3) {
+      // just a tiny bump of a seed sprouting
+      out += '<ellipse cx="150" cy="262" rx="9" ry="6" fill="#a9744d"/>';
+      out += '<path d="M150 264 q-2 -8 0 -14" stroke="#7cc576" stroke-width="4" fill="none" stroke-linecap="round"/>';
+      plantEl.innerHTML = out;
+      return;
+    }
+
+    // stem
+    out += '<path d="M150 ' + BASE_Y + ' Q' + (150 + 10) + ' ' + (BASE_Y - h / 2) + ' 150 ' + topY +
+           '" stroke="#5cb85e" stroke-width="' + (5 + g / 25) + '" fill="none" stroke-linecap="round"/>';
+
+    // side leaves
+    var n = clamp(Math.floor(g / 9), 0, 10);
+    for (var i = 0; i < n; i++) {
+      var t = n === 1 ? 0.5 : i / (n - 1);
+      var y = BASE_Y - h * (0.18 + 0.68 * t);
+      var side = i % 2 === 0 ? -1 : 1;
+      var xOff = 150 + (Math.sin((1 - t) * Math.PI) * 5 * (h / 100)); // follow the curve a little
+      var size = 0.65 + 0.45 * (1 - Math.abs(t - 0.4));
+      out += leaf(xOff, y, side, size, 18);
+    }
+
+    // top: bud leaves or flower
+    if (g >= 85) {
+      var petals = "";
+      for (var p = 0; p < 7; p++) {
+        var a = (p / 7) * Math.PI * 2;
+        petals += '<circle cx="' + (150 + Math.cos(a) * 17) + '" cy="' + (topY + Math.sin(a) * 17) + '" r="12" fill="#ff9fc0"/>';
+      }
+      out += petals + '<circle cx="150" cy="' + topY + '" r="12" fill="#ffd54a"/>' +
+             '<circle cx="146" cy="' + (topY - 3) + '" r="2" fill="#f0b400"/>' +
+             '<circle cx="154" cy="' + (topY + 2) + '" r="2" fill="#f0b400"/>';
+    } else {
+      out += leaf(150, topY + 2, -1, 0.9, 40) + leaf(150, topY + 2, 1, 0.9, 40);
+      if (g >= 60) {
+        // little bud forming
+        out += '<circle cx="150" cy="' + (topY - 6) + '" r="' + (3 + (g - 60) / 5) + '" fill="#ffb3cd"/>';
+      }
+    }
+    plantEl.innerHTML = out;
+  }
+
+  function drawFace(m, giggle) {
+    var eyes, mouth;
+    var ink = "#5b3a29";
+    if (giggle) {
+      eyes = '<path d="M121 301 q7 -8 14 0" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>' +
+             '<path d="M165 301 q7 -8 14 0" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+      mouth = '<path d="M139 311 q11 16 22 0z" fill="' + ink + '"/><path d="M144 316 q6 5 12 0" fill="#ff8fa3"/>';
+      faceEl.innerHTML = eyes + mouth;
+      return;
+    }
+    eyes = '<g class="eyes"><circle cx="128" cy="300" r="5.2" fill="' + ink + '"/><circle cx="172" cy="300" r="5.2" fill="' + ink + '"/>' +
+           '<circle cx="129.8" cy="298" r="1.7" fill="#fff"/><circle cx="173.8" cy="298" r="1.7" fill="#fff"/></g>';
+    if (m === "happy") mouth = '<path d="M138 311 Q150 324 162 311" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+    else if (m === "meh") mouth = '<path d="M142 315 L158 315" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+    else mouth = '<path d="M139 318 Q150 307 161 318" stroke="' + ink + '" stroke-width="3.2" fill="none" stroke-linecap="round"/>';
+    faceEl.innerHTML = eyes + mouth;
+  }
+
+  var lastMsgAt = 0;
+  var lines = {
+    happy: ["Life is good!", "I feel wonderful.", "The world is so green!", "Thanks for being here.", "I think I grew a bit."],
+    meh: ["I could use a little something.", "Hmm, feeling so-so.", "Check on me soon?"],
+    sad: ["I'm feeling droopy...", "Please take care of me?", "Everything is a bit much."]
+  };
+
+  function say(text, hold) {
+    var b = $("bubble");
+    b.textContent = text;
+    b.style.opacity = 1;
+    lastMsgAt = Date.now() + (hold || 0);
+  }
+
+  function render(opts) {
+    opts = opts || {};
+    $("m-water").style.width = state.water + "%";
+    $("m-sun").style.width = state.sun + "%";
+    $("m-love").style.width = state.love + "%";
+    $("m-grow").style.width = state.growth + "%";
+    $("grow-label").textContent = "Growth " + Math.round(state.growth) + "%";
+    $("stage").textContent = stageName(state.growth);
+    $("scene").classList.toggle("sunny", state.sun > 70);
+    var m = mood();
+    $("tilt").classList.toggle("droop", m === "sad");
+    drawPlant();
+    drawFace(m, opts.giggle);
+  }
+
+  /* ---------- Particles ---------- */
+  var scene = $("scene");
+  function spawn(cls, html, x, y, styleVars, life) {
+    var el = document.createElement("div");
+    el.className = "p " + cls;
+    if (html) el.innerHTML = html;
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    for (var k in styleVars) el.style.setProperty(k, styleVars[k]);
+    scene.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, life);
+  }
+  function floaters(chars, colors, n, spread) {
+    var w = scene.clientWidth, h = scene.clientHeight;
+    for (var i = 0; i < n; i++) {
+      (function (i) {
+        setTimeout(function () {
+          spawn("rise", pick(chars), w / 2 + rand(-spread, spread), h * 0.55 + rand(-30, 30),
+                { "--dx": rand(-30, 30) + "px", color: pick(colors), fontSize: rand(16, 26) + "px" }, 1700);
+        }, i * 90);
+      })(i);
+    }
+  }
+  function rain() {
+    var w = scene.clientWidth, h = scene.clientHeight;
+    for (var i = 0; i < 14; i++) {
+      (function (i) {
+        setTimeout(function () {
+          spawn("drop", "", w / 2 + rand(-60, 60), 30, { "--fall": (h * 0.6 + rand(-20, 20)) + "px" }, 1000);
+        }, i * 60);
+      })(i);
+    }
+  }
+
+  function bounce() {
+    var pot = $("pot-group");
+    pot.classList.remove("bounce"); void pot.getBBox(); pot.classList.add("bounce");
+    var pl = $("plant");
+    pl.classList.remove("wiggle"); void pl.getBBox(); pl.classList.add("wiggle");
+  }
+
+  /* ---------- Game logic ---------- */
+  function grow(amount) {
+    var before = stageName(state.growth);
+    var factor = mood() === "happy" ? 1.3 : mood() === "meh" ? 1 : 0.4;
+    state.growth = clamp(state.growth + amount * factor, 0, 100);
+    if (stageName(state.growth) !== before) {
+      floaters(["★", "✦", "♥"], ["#ffc93c", "#ff8fb1", "#7cc576"], 8, 70);
+      say("I leveled up! Now I'm a " + stageName(state.growth).toLowerCase() + ".", 3000);
+    }
+  }
+
+  function decay(mult) {
+    state.water = clamp(state.water - 2.2 * mult, 0, 100);
+    state.sun = clamp(state.sun - 1.6 * mult, 0, 100);
+    state.love = clamp(state.love - 1.4 * mult, 0, 100);
+    if (state.water > 25 && state.sun > 25) grow(0.35 * mult);
+  }
+
+  function water() {
+    if (state.water > 92) { say("Glug! That's plenty, thank you.", 2000); render(); return; }
+    state.water = clamp(state.water + 22, 0, 100);
+    rain();
+    grow(1.6);
+    say(pick(["Ahh, so refreshing!", "Splish splash!", "Yum, water!"]), 2000);
+    render(); save();
+  }
+  function shine() {
+    if (state.sun > 92) { say("Toasty! I'm all sunned up.", 2000); render(); return; }
+    state.sun = clamp(state.sun + 22, 0, 100);
+    floaters(["☀"], ["#ffb800"], 5, 60);
+    grow(1.6);
+    say(pick(["Warm and cozy.", "Sunbeams!", "I love the sunshine."]), 2000);
+    render(); save();
+  }
+  function sing() {
+    state.love = clamp(state.love + 14, 0, 100);
+    floaters(["♪", "♫", "♬"], ["#9a6bff", "#ff7aa2", "#4fb3ff"], 7, 80);
+    grow(1.2);
+    say(pick(["La la la~", "Do you take requests?", "I'm feeling musical."]), 2000);
+    bounce(); render(); save();
+  }
+  function pet() {
+    state.love = clamp(state.love + 18, 0, 100);
+    floaters(["♥"], ["#ff7aa2", "#ff5c8a", "#ffa6c1"], 6, 50);
+    grow(1);
+    say(pick(["Hehe, that tickles!", "Aww!", "You're the best.", "More pets, please!"]), 2000);
+    bounce();
+    render({ giggle: true });
+    setTimeout(function () { render(); }, 900);
+    save();
+  }
+
+  /* ---------- Wire up ---------- */
+  $("btn-water").addEventListener("click", water);
+  $("btn-sun").addEventListener("click", shine);
+  $("btn-song").addEventListener("click", sing);
+  $("btn-pet").addEventListener("click", pet);
+  scene.addEventListener("click", pet);
+
+  $("name").addEventListener("input", function (e) {
+    state.name = e.target.value.slice(0, 14);
+    save();
+  });
+  $("reset").addEventListener("click", function () {
+    if (!confirm("Plant a brand new seed? Your current buddy will be replaced.")) return;
+    var nm = state.name;
+    state = fresh(); state.name = nm;
+    render(); save();
+    say("Hi! I'm a little seed.", 3000);
+  });
+
+  /* Slow tick: everything gets a little needier over time */
+  setInterval(function () {
+    decay(1);
+    render();
+    if (Date.now() > lastMsgAt) say(pick(lines[mood()]));
+    save();
+  }, 4000);
+
+  load();
+  $("name").value = state.name;
+  render();
+  say(state.growth < 3 ? "Hi! I'm a little seed." : "Welcome back, " + "friend!", 3000);
+})();
+</script>
+</body>
+</html>
